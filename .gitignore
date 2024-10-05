@@ -1,0 +1,84 @@
+# Python/Django specific ignores
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+db.sqlite3
+
+# Django stuff:
+*.log
+media/
+staticfiles/
+static/
+
+# Pipenv and Virtualenv
+Pipfile.lock
+Pipfile
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+*.env
+
+# Environment variables
+.env
+.env.*
+
+# Ignore database migrations
+*/migrations/*
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs (PyCharm, IntelliJ)
+.idea/
+
+# macOS specific files
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Docker specific ignores
+docker-compose.override.yml
+docker-compose.prod.yml
+Dockerfile
+*.orig
+
+# Ignore compiled translation files
+*.mo
+
+# Ignore node modules (if using React or other frontend tools within the project)
+node_modules/
+
+# Ignore coverage files
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore backup files
+*.bak
+*.swp
+
+# Ignore static and media (if they are generated and not committed)
+media/
+static/
