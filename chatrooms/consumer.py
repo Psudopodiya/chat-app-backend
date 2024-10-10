@@ -1,10 +1,14 @@
 import jwt
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from urllib.parse import urljoin
+from .models import ChatMessage, ChatRoom
+
+logger = logging.getLogger(__name__)
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -37,9 +41,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         self.room_group_name,
                         self.channel_name
                     )
-                    await self.accept(subprotocol=real_protocol)  # Accept with the real protocol
+                    logger.info("Accepting connection...")
+                    await self.accept(subprotocol=real_protocol)
+
+                    logger.info("Retrieving chat messages...")
+                    messages = await self.get_chat_messages(self.room_name)
+                    logger.info(f"Retrieved {len(messages)} messages")
+
+                    logger.info("Sending chat history...")
+                    for message in messages:
+                        await self.send(text_data=json.dumps({
+                            'message': message['message'],
+                            'username': message['username'],
+                            'profile_image_url': message['profile_image_url']
+                        }))
+                    logger.info("Chat history sent")
+                    # Accept with the real protocol
+
+                    logger.info("Connection established and ready for communication")
                 else:
-                    # Close the connection if the user is not found
                     await self.close()
             except jwt.ExpiredSignatureError:
                 # Handle expired token
@@ -47,19 +67,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
             except jwt.InvalidTokenError:
                 # Handle invalid token
                 await self.close()
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}")
+                await self.close()
         else:
             # Close the connection if no token is provided
             await self.close()
 
-    async def get_user(self, user_id):
-        return await database_sync_to_async(self._get_user)(user_id)
+    async def user_join(self, event):
+        """
+        Called when a user joins the chat room.
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'user_join',
+            'username': event['username'],
+        }))
 
-    def _get_user(self, user_id):
+    @database_sync_to_async
+    def get_user(self, user_id):
         User = get_user_model()
         try:
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             return None
+
+    @database_sync_to_async
+    def get_chat_messages(self, room_name):
+        messages = ChatMessage.objects.filter(room_name=room_name).order_by('timestamp')[:50]
+        return [
+            {
+                'message': msg.content,
+                'username': msg.user.username,
+                'profile_image_url': self.build_absolute_uri(
+                    msg.user.profile_image.url) if msg.user.profile_image else None,
+                'timestamp': msg.timestamp.isoformat()
+            }
+            for msg in messages
+        ]
 
     async def disconnect(self, close_code):
         # Leave the room group when the WebSocket connection is closed
@@ -74,13 +118,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Construct the full media URL by joining MEDIA_URL with the profile image's relative URL
         return urljoin(f"http://127.0.0.1:8000{settings.MEDIA_URL}", relative_url)
 
-    # Receive a message from the WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
 
         # Construct the profile image URL
         profile_image = self.build_absolute_uri(self.user.profile_image.url) if self.user.profile_image else None
+
+        # Save the message to the database
+        await self.save_message(self.room_name, self.user, message)
 
         # Send the message to the room group
         await self.channel_layer.group_send(
@@ -92,6 +138,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'profile_image': profile_image
             }
         )
+
+    @database_sync_to_async
+    def save_message(self, room_name, user, content):
+        ChatMessage.objects.create(room_name=room_name, user=user, content=content)
 
     # Receive a message from the room group
     async def chat_message(self, event):

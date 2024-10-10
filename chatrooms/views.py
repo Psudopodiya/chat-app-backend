@@ -15,13 +15,11 @@ def list_rooms(request):
 
 @api_view(['POST'])
 def create_room(request):
-    if request.user.is_authenticated:
-        serializer = CreateRoomSerializer(data=request.data)
-        if serializer.is_valid():
-            room = serializer.save(owner=request.user)
-            return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+    serializer = CreateRoomSerializer(data=request.data)
+    if serializer.is_valid():
+        room = serializer.save(owner=request.user)
+        return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
