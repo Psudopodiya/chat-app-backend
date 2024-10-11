@@ -81,6 +81,52 @@ The application is structured using Docker services as follows:
 
 - **postgres_data**: A Docker volume providing persistent storage for the PostgreSQL database
 
+## 🌐 WebSocket Routing
+
+The real-time chat functionality is powered by Django Channels, which uses WebSockets to enable bi-directional communication between the client and the server.
+
+Routing Configuration
+The WebSocket routing is defined in the routing.py file:
+  ```python
+  from django.urls import re_path
+  from chatrooms.consumer import ChatConsumer
+  
+  websocket_urlpatterns = [
+      re_path(r'ws/chat/(?P<room_name>\w+)/$', ChatConsumer.as_asgi()),
+  ]
+  ```
+ - **Endpoint**: ws/chat/<room_name>/
+
+  #### Description: 
+  - Establishes a WebSocket connection for a specific chat room identified by <room_name>.
+  - Consumer: ChatConsumer handles the WebSocket events for sending and receiving messages.
+  
+  #### How It Works
+  When a user navigates to a chat room, the client establishes a WebSocket connection to the server using the URL pattern defined above.
+  The ChatConsumer listens for incoming WebSocket connections and handles messages sent over the WebSocket.
+  Messages sent by users are broadcasted in real-time to all participants in the chat room.
+  Additional Configuration
+  Ensure that the routing is properly included in your project's ASGI application. In your asgi.py file, you should include:
+
+  ```python
+  import os
+  import django
+  from channels.routing import ProtocolTypeRouter, URLRouter
+  from channels.auth import AuthMiddlewareStack
+  from chatrooms.routing import websocket_urlpatterns
+  
+  os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chatapp.settings')
+  django.setup()
+  
+  application = ProtocolTypeRouter({
+      'websocket': AuthMiddlewareStack(
+          URLRouter(
+              websocket_urlpatterns
+          )
+      ),
+  })
+  ```
+
 ## 🔗 API Endpoints
 
 ### User Authentication
