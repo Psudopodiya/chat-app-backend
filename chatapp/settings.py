@@ -71,11 +71,13 @@ WSGI_APPLICATION = 'chatapp.wsgi.application'
 
 ASGI_APPLICATION = 'chatapp.asgi.application'
 
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+            'hosts': [(REDIS_HOST, 6379)],
         },
     },
 }
@@ -152,23 +154,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Add this line
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',  # Set to DEBUG to catch all messages
-#         },
-#         '': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',  # Root logger
-#         },
-#     },
-# }

@@ -13,6 +13,7 @@ services:
       - "8000:8000"
     environment:
       - DJANGO_SETTINGS_MODULE=chatapp.settings
+      - REDIS_HOST=redis
     depends_on:
       - db
     networks:
@@ -30,6 +31,7 @@ services:
       - "8001:8001"
     environment:
       - DJANGO_SETTINGS_MODULE=chatapp.settings
+      - REDIS_HOST=redis
     depends_on:
       - db
     networks:

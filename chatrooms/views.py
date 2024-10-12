@@ -1,9 +1,11 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import ChatRoom
 from .serializers import RoomSerializer, CreateRoomSerializer
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 @api_view(['GET'])
@@ -18,11 +20,21 @@ def create_room(request):
     serializer = CreateRoomSerializer(data=request.data)
     if serializer.is_valid():
         room = serializer.save(owner=request.user)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "rooms",
+            {
+                "type": "room_created",
+                "message": RoomSerializer(room).data
+            }
+        )
+        return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
+@permission_classes(['IsAuthenticated'])
 def join_room(request, room_id):
     if request.user.is_authenticated:
         try:
