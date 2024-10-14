@@ -117,7 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     def build_absolute_uri(self, relative_url):
         # Construct the full media URL by joining MEDIA_URL with the profile image's relative URL
-        return urljoin(f"http://127.0.0.1:8000{settings.MEDIA_URL}", relative_url)
+        return urljoin(f"http://127.0.0.1:8001{settings.MEDIA_URL}", relative_url)
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)

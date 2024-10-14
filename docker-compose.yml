@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    image: chatapp_web:latest
+    image: chatapp_web:1.0.0 # Specify a version tag for the web service
     command: daphne -p 8000 chatapp.asgi:application
     volumes:
       - .:/app
@@ -23,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: chatapp_admin:latest
+    image: chatapp_admin:1.0.0 # Specify a version tag for the admin service
     command: python manage.py runserver 0.0.0.0:8001
     volumes:
       - .:/app
@@ -38,7 +36,7 @@ services:
       - chatapp_network
 
   db:
-    image: postgres:latest
+    image: postgres:13 # Explicitly tag the PostgreSQL version
     environment:
       POSTGRES_DB: quick_connect
       POSTGRES_USER: postgres
@@ -49,7 +47,7 @@ services:
       - chatapp_network
 
   redis:
-    image: redis:7
+    image: redis:7 # Explicitly tag the Redis version
     ports:
       - "6379:6379"
     networks:

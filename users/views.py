@@ -32,7 +32,7 @@ def profile(request):
     return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@api_view(['PUT'])
+@api_view(['PUT', 'POST'])
 def edit_profile(request):
     if request.user.is_authenticated:
         user = request.user
