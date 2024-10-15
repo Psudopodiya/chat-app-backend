@@ -1,5 +1,6 @@
 from django.urls import re_path
-from chatrooms.consumer import ChatConsumer, RoomConsumer
+from chatrooms.consumers.ChatRoomConsumer import ChatConsumer
+from chatrooms.consumers.RoomConsumer import RoomConsumer
 
 
 websocket_urlpatterns = [
