@@ -1,6 +1,7 @@
 import jwt
 import json
 import logging
+from datetime import datetime
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
@@ -54,7 +55,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         await self.send(text_data=json.dumps({
                             'message': message['message'],
                             'username': message['username'],
-                            'profile_image_url': message['profile_image_url']
+                            'profile_image_url': message['profile_image_url'],
+                            'timestamp': message['timestamp'],
                         }))
                     logger.info("Chat history sent")
                     # Accept with the real protocol
@@ -128,6 +130,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Save the message to the database
         await self.save_message(self.room_id, self.user, message)
+        timestamp = datetime.now().isoformat()
 
         # Send the message to the room group
         await self.channel_layer.group_send(
@@ -136,7 +139,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'username': self.user.username,
-                'profile_image': profile_image
+                'profile_image': profile_image,
+                'timestamp': timestamp
             }
         )
 
@@ -149,12 +153,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event['message']
         username = event['username']
         profile_image = event['profile_image']
+        timestamp = event['timestamp']
 
         # Send the message to the WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
             'username': username,
-            'profile_image_url': profile_image
+            'profile_image_url': profile_image,
+            'timestamp': timestamp,
         }))
 
 
