@@ -16,10 +16,13 @@ def list_rooms(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_room(request):
     serializer = CreateRoomSerializer(data=request.data)
     if serializer.is_valid():
         room = serializer.save(owner=request.user)
+
+        # Notify about room creation via WebSocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "rooms",
@@ -28,13 +31,13 @@ def create_room(request):
                 "message": RoomSerializer(room).data
             }
         )
-        return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
+
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
-@permission_classes(['IsAuthenticated'])
+@permission_classes([IsAuthenticated])
 def join_room(request, room_id):
     if request.user.is_authenticated:
         try:

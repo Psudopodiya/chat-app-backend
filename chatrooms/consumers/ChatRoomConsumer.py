@@ -54,10 +54,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         if self.user:
-        # if self.room.room_type == 'public' or await self.is_room_participant(self.user, self.room):
-            await self.channel_layer.group_add(self.room_group_id, self.channel_name)
-            await self.accept(subprotocol=self.scope['subprotocols'][0])
-            logger.info(f"User {self.user.username} joined room {self.room_id}")
+            if self.room.room_type == 'public':
+                await self.channel_layer.group_add(self.room_group_id, self.channel_name)
+                await self.accept(subprotocol=self.scope['subprotocols'][0])
+                logger.info(f"User {self.user.username} joined room {self.room_id}")
+            elif self.room.room_type == 'private':
+                if await self.is_room_participant(self.user, self.room):
+                    await self.channel_layer.group_add(self.room_group_id, self.channel_name)
+                    await self.accept(subprotocol=self.scope['subprotocols'][0])
+                    logger.info(f"User {self.user.username} joined private room {self.room_id}")
+                else:
+                    logger.warning(f"User {self.user.username} not allowed in private room {self.room_id}")
+                    await self.close()
+            elif self.room.room_type == 'one-to-one':
+                if await self.is_room_participant(self.user, self.room):
+                    await self.channel_layer.group_add(self.room_group_id, self.channel_name)
+                    await self.accept(subprotocol=self.scope['subprotocols'][0])
+                    logger.info(f"User {self.user.username} joined one-to-one room {self.room_id}")
+                else:
+                    logger.warning(f"User {self.user.username} not allowed in one-to-one room {self.room_id}")
+                    await self.close()
+            else:
+                logger.warning(f"Room type {self.room.room_type} is not recognized")
+                await self.close()
         else:
             logger.warning(f"User {self.user.username} not allowed in room {self.room_id}")
             await self.close()
