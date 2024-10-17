@@ -52,7 +52,6 @@ Desktop.ini
 # Docker specific ignores
 docker-compose.override.yml
 docker-compose.prod.yml
-Dockerfile
 *.orig
 
 # Ignore compiled translation files
