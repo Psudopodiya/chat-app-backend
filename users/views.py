@@ -42,3 +42,16 @@ def edit_profile(request):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET'])
+def list_users(request):
+    if request.user.is_authenticated:
+        users = CustomUser.objects.all()
+        serializer = UserSerializer(users, many=True)
+        response_list = []
+        for data in serializer.data:
+            if not data.get('username') == request.user.username:
+                response_list.append(data.get('username'))
+        return Response(response_list, status=status.HTTP_200_OK)
+    return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
