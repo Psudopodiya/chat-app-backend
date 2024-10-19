@@ -12,7 +12,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatRoom
-        fields = ['id', 'title', 'description', 'owner', 'participants', 'created_at']
+        fields = ['id', 'title', 'description', 'owner', 'participants', 'created_at', 'room_type']
 
 
 class CreateRoomSerializer(serializers.ModelSerializer):
@@ -21,20 +21,25 @@ class CreateRoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatRoom
-        fields = ['title', 'description', 'participants', 'owner']
+        fields = ['title', 'description', 'participants', 'owner', "room_type"]
 
     def create(self, validated_data):
         participants_usernames = validated_data.pop('participants')
         owner = validated_data.pop('owner')
         room = ChatRoom.objects.create(owner=owner, **validated_data)
+        room_type = validated_data.get('room_type')
 
-        participants = []
-        for username in participants_usernames:
-            try:
-                user = User.objects.get(username=username)
-                participants.append(user)
-            except User.DoesNotExist:
-                raise serializers.ValidationError(f"User '{username}' does not exist.")
+        participants = [owner]
+
+        if room_type == 'public':
+            participants += list(User.objects.all())
+        else:
+            for username in participants_usernames:
+                try:
+                    user = User.objects.get(username=username)
+                    participants.append(user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(f"User '{username}' does not exist.")
 
         room.participants.set(participants)
         return room

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserSerializer, EditProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from chatrooms.models import ChatRoom
 
 CustomUser = get_user_model()
 
@@ -15,6 +16,12 @@ def register(request):
     if serializer.is_valid():
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
+
+        public_rooms = ChatRoom.objects.filter(room_type='public')
+
+        for room in public_rooms:
+            room.participants.add(user)
+
         return Response({
             'user': UserSerializer(user).data,
             'refresh': str(refresh),
