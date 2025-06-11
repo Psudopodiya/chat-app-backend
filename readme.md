@@ -48,18 +48,18 @@ chmod +x ./scripts/*.sh
 ./scripts/build.sh
 ```
 
+### Start the application
+
+```bash
+./run.sh
+```
+
 #### Migrate the Database
 
 When running for the first time, make migrations first:
 
 ```bash
 ./scripts/migrate.sh
-```
-
-#### Start the Application
-
-```bash
-./scripts/run.sh
 ```
 
 The application will be accessible at:
