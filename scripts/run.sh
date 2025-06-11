@@ -1,3 +1,3 @@
 #!/bin/bash
 # Start the application
-docker-compose up
+docker-compose up -d
